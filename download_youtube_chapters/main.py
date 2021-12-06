@@ -21,7 +21,7 @@ class ChapterProcessor(PostProcessor):
     def log(s: str):
         print("ChapterProcessor: " + s)
 
-    def create_chapter(self, chapter) -> bool:
+    def create_chapter(self, chapter, track_number) -> bool:
         start = chapter["start_time"]
         end = chapter["end_time"]
         diff = end - start
@@ -32,7 +32,7 @@ class ChapterProcessor(PostProcessor):
             "-t", str(diff),
             "-acodec", "copy",
             "-vcodec", "copy",
-            self.file.output_chapter_file(chapter["title"])
+            self.file.output_chapter_file(f"{ track_number } - {chapter['title']}")
             ]
         ret = subprocess.run(args)
         return ret.returncode == 0
@@ -46,8 +46,10 @@ class ChapterProcessor(PostProcessor):
             self.log("Failed to create output folder.")
             return False
 
-        for chapter in self.file.chapters:
-            if not self.create_chapter(chapter):
+        track_count = len(self.file.chapters)
+        track_number_characters = len(str(track_count))
+        for track_index, chapter in enumerate(self.file.chapters):
+            if not self.create_chapter(chapter, str(track_index + 1).zfill(track_number_characters)):
                 self.log("Failed to create chapter file: " + chapter["title"])
         return True
 
